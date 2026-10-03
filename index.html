@@ -30,17 +30,18 @@ main{padding:14px 14px calc(env(safe-area-inset-bottom) + 40px);max-width:760px;
 .dhead{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line)}
 .dhead h2{margin:0;font-size:18px;flex:1}
 #tribes{flex:1;overflow-y:auto;padding:8px 8px 20px;-webkit-overflow-scrolling:touch}
-.tribe{margin-bottom:6px;border-radius:14px;background:var(--bg);border:1px solid var(--line);overflow:hidden}
-.trow,.frow{display:flex;align-items:center;gap:4px;padding:4px 6px}
-.tname{flex:1;text-align:right;background:none;border:none;font-weight:700;font-size:16px;padding:10px 6px;display:flex;gap:6px;align-items:center}
-.tname small{color:var(--muted);font-weight:400}
-.chev{color:var(--acc);width:14px;display:inline-block}
-.secs{border-top:1px solid var(--line);background:var(--card);padding:4px 0}
-.sec{margin:2px 6px 4px;border-radius:12px;border:1px solid var(--line);overflow:hidden}
-.srow{display:flex;align-items:center;gap:2px;padding:2px 4px;background:var(--acc-soft)}
-.sname{flex:1;text-align:right;background:none;border:none;font-weight:600;font-size:15px;padding:9px 6px;display:flex;gap:6px;align-items:center;color:var(--acc)}
-.sname small{color:var(--muted);font-weight:400}
-.fams{background:var(--card);padding:2px 0}
+.grp{border-radius:14px;border:1px solid var(--line);margin:6px 0;overflow:hidden;background:var(--card)}
+.grow,.frow{display:flex;align-items:center;gap:2px;padding:2px 4px}
+.g-tribe>.grow{background:var(--bg)}
+.g-sec>.grow{background:var(--c-sec)}
+.g-fakh>.grow{background:var(--c-fakh)}
+.g-thawi>.grow{background:var(--c-thawi)}
+.gname{flex:1;min-width:0;text-align:right;background:none;border:none;font-weight:800;font-size:18px;padding:11px 4px;display:flex;gap:7px;align-items:center;flex-wrap:wrap;line-height:1.4}
+.g-tribe>.grow .gname{font-size:20px}
+.gname small{color:var(--muted);font-weight:500;font-size:15px}
+.kb{font-size:13px;font-weight:800;padding:2px 8px;border-radius:8px;background:var(--card);color:var(--acc);border:1px solid var(--line)}
+.gkids{padding:2px 6px 6px;border-top:1px solid var(--line)}
+.chev{color:var(--acc);width:16px;display:inline-block}
 .frow{padding:2px 6px 2px 6px}
 .frow.cur .fname{color:var(--acc);font-weight:700}
 .fname{flex:1;text-align:right;background:none;border:none;padding:10px 26px 10px 6px;font-size:15px;position:relative}
@@ -108,6 +109,42 @@ main{padding:14px 14px calc(env(safe-area-inset-bottom) + 40px);max-width:760px;
 
 #toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 24px);transform:translateX(-50%) translateY(20px);background:#2b2418;color:#fff;padding:10px 18px;border-radius:20px;font-size:14px;opacity:0;transition:.25s;z-index:50;pointer-events:none;white-space:nowrap}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ===== خط أوضح وصور أكبر ===== */
+:root{--ink:#1a140c;--muted:#5c5142;--c-sec:#f1e3d0;--c-fakh:#e3eddc;--c-thawi:#dfe8f3}
+@media (prefers-color-scheme:dark){:root{--ink:#fbf5ea;--muted:#c4b6a0;--c-sec:#3a2d20;--c-fakh:#26331f;--c-thawi:#1f2a36}}
+body{font-size:18px}
+header h1{font-size:22px;font-weight:800}
+#drawer{width:min(94vw,440px)}
+.dhead h2{font-size:22px}
+.fname{font-size:18px;font-weight:700;padding:12px 26px 12px 6px}
+.frow.cur .fname{font-weight:900}
+.mini{width:40px;height:40px;font-size:18px}
+.nofam{font-size:15px}
+.btn{font-size:17px;font-weight:700;padding:13px 16px}
+.btn.small{font-size:16px;padding:10px 14px}
+.btn.big{font-size:19px;padding:16px}
+.chooser{display:grid;gap:10px}
+.crumbs{font-size:15px}
+.crumb{font-size:15px;padding:6px 13px;font-weight:600}
+.role{font-size:16px;padding:5px 14px}
+.avatar{width:130px;height:130px;font-size:50px;border-width:4px}
+.avatar.big{width:230px;height:230px;font-size:90px}
+.fullname{font-size:26px;font-weight:900}
+.spouses{font-size:18px}
+.spouses b{font-weight:800}
+.sechead h3{font-size:21px;font-weight:900}
+.sechead h3 small{font-size:17px}
+.grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.pcard{padding:16px 8px 14px}
+.pname{font-size:19px;font-weight:900;margin-top:10px}
+.psp{font-size:15.5px;font-weight:500}
+.pkids{font-size:15px;font-weight:700}
+.fl{font-size:16px;font-weight:600}
+.fl input,.fl textarea{font-size:18px}
+.seg button{font-size:17px;padding:11px}
+.sheet h3{font-size:21px}
+#toast{font-size:16px}
 </style>
 </head>
 <body>
@@ -172,46 +209,43 @@ function spouseText(p){const sp=(p.spouses||[]).filter(Boolean);if(!sp.length)re
 
 function collect(id,out=[]){const p=S.persons[id];if(!p)return out;out.push(id);(p.children||[]).forEach(c=>collect(c,out));return out}
 async function deletePersons(ids){for(const id of ids){const p=S.persons[id];if(p&&p.photo){await DB.del('img',p.photo);delete imgCache[p.photo]}delete S.persons[id]}}
-const famsOf=t=>t.sections.flatMap(s=>s.families);
-function isRootId(id){return S.tribes.some(t=>famsOf(t).some(f=>f.rootId===id))}
+const RANK={tribe:0,sec:1,fakh:2,thawi:3,fam:4};
+const KN={tribe:'قبيلة',sec:'قسم',fakh:'فخذ',thawi:'ذوي',fam:'عائلة'};
+const allFams=n=>n.kind==='fam'?[n]:(n.kids||[]).flatMap(allFams);
+function findNode(id){let res=null;const walk=(arr,chain)=>arr.some(n=>{const c=[...chain,n];if(n.id===id){res={node:n,chain:c};return true}return n.kids?walk(n.kids,c):false});walk(S.tribes,[]);return res}
+function isRootId(id){return S.tribes.some(t=>allFams(t).some(f=>f.rootId===id))}
 function migrate(){S.tribes=S.tribes||[];S.persons=S.persons||{};
-  S.tribes.forEach(t=>{if(!t.sections){t.sections=t.families&&t.families.length?[{id:uid(),name:'عام',open:true,families:t.families}]:[]}delete t.families;
-    t.sections.forEach(s=>{s.families=s.families||[]})});
-  if(S.nav&&!S.nav.s){const t=S.tribes.find(x=>x.id===S.nav.t);const s=t&&t.sections.find(x=>x.families.some(f=>f.id===S.nav.f));S.nav=s?{...S.nav,s:s.id}:null}}
+  S.tribes.forEach(t=>{t.kind='tribe';
+    if(!t.kids){const secs=t.sections||(t.families&&t.families.length?[{id:uid(),name:'عام',open:true,families:t.families}]:[]);
+      t.kids=secs.map(s=>({id:s.id,kind:'sec',name:s.name,open:s.open!==false,kids:(s.families||[]).map(f=>({id:f.id,kind:'fam',name:f.name,rootId:f.rootId}))}))}
+    delete t.sections;delete t.families});
+  if(S.nav&&!findNode(S.nav.f))S.nav=null}
 
 /* ========== القائمة ========== */
 function openDrawer(){$('#drawer').classList.add('open');$('#scrim').classList.add('show')}
 function closeDrawer(){$('#drawer').classList.remove('open');$('#scrim').classList.remove('show')}
 $('#scrim').onclick=closeDrawer;
 
+function nodeHtml(n){
+  if(n.kind==='fam')return `<div class="frow ${S.nav&&S.nav.f===n.id?'cur':''}">
+    <button class="fname" data-act="openFam" data-id="${n.id}">${esc(n.name)}</button>
+    <button class="mini" data-act="editNode" data-id="${n.id}" aria-label="تعديل">✎</button>
+    <button class="mini" data-act="delNode" data-id="${n.id}" aria-label="حذف">🗑</button></div>`;
+  const kids=n.kids||[];
+  return `<div class="grp g-${n.kind}"><div class="grow">
+    <button class="gname" data-act="toggle" data-id="${n.id}"><span class="chev">${n.open?'▾':'◂'}</span>${n.kind!=='tribe'?`<span class="kb">${KN[n.kind]}</span>`:''}<span>${esc(n.name)}</span><small>(${allFams(n).length})</small></button>
+    <button class="mini" data-act="addIn" data-id="${n.id}" aria-label="إضافة">＋</button>
+    <button class="mini" data-act="editNode" data-id="${n.id}" aria-label="تعديل">✎</button>
+    <button class="mini" data-act="delNode" data-id="${n.id}" aria-label="حذف">🗑</button></div>
+    ${n.open?`<div class="gkids">${kids.map(nodeHtml).join('')||'<div class="nofam">فارغ — اضغط ＋ لإضافة قسم أو فخذ أو ذوي أو عائلة</div>'}</div>`:''}</div>`}
 function renderDrawer(){
   const list=$('#tribes');
   if(!S.tribes.length){list.innerHTML='<p class="empty">لا توجد قبائل بعد.<br>اضغط «إضافة قبيلة» للبدء.</p>';return}
-  list.innerHTML=S.tribes.map(t=>`<div class="tribe">
-    <div class="trow">
-      <button class="tname" data-act="toggle" data-t="${t.id}"><span class="chev">${t.open?'▾':'◂'}</span>${esc(t.name)} <small>(${t.sections.length})</small></button>
-      <button class="mini" data-act="addSec" data-t="${t.id}" aria-label="إضافة قسم">＋</button>
-      <button class="mini" data-act="editTribe" data-t="${t.id}" aria-label="تعديل">✎</button>
-      <button class="mini" data-act="delTribe" data-t="${t.id}" aria-label="حذف">🗑</button>
-    </div>
-    ${t.open?`<div class="secs">${t.sections.map(s=>`<div class="sec">
-      <div class="srow">
-        <button class="sname" data-act="toggleSec" data-t="${t.id}" data-s="${s.id}"><span class="chev">${s.open?'▾':'◂'}</span>${esc(s.name)} <small>(${s.families.length})</small></button>
-        <button class="mini" data-act="addFam" data-t="${t.id}" data-s="${s.id}" aria-label="إضافة عائلة">＋</button>
-        <button class="mini" data-act="editSec" data-t="${t.id}" data-s="${s.id}" aria-label="تعديل">✎</button>
-        <button class="mini" data-act="delSec" data-t="${t.id}" data-s="${s.id}" aria-label="حذف">🗑</button>
-      </div>
-      ${s.open?`<div class="fams">${s.families.map(f=>`<div class="frow ${S.nav&&S.nav.f===f.id?'cur':''}">
-        <button class="fname" data-act="openFam" data-t="${t.id}" data-s="${s.id}" data-f="${f.id}">${esc(f.name)}</button>
-        <button class="mini" data-act="editFam" data-t="${t.id}" data-s="${s.id}" data-f="${f.id}" aria-label="تعديل">✎</button>
-        <button class="mini" data-act="delFam" data-t="${t.id}" data-s="${s.id}" data-f="${f.id}" aria-label="حذف">🗑</button>
-      </div>`).join('')||'<div class="nofam">لا توجد عوائل — اضغط ＋ بجانب القسم</div>'}</div>`:''}
-    </div>`).join('')||'<div class="nofam">لا توجد أقسام — اضغط ＋ بجانب القبيلة</div>'}</div>`:''}
-  </div>`).join('');
+  list.innerHTML=S.tribes.map(nodeHtml).join('');
 }
 
 /* ========== الصفحة الرئيسية ========== */
-function curFam(){if(!S.nav)return null;const t=S.tribes.find(x=>x.id===S.nav.t);const s=t&&t.sections.find(x=>x.id===S.nav.s);const f=s&&s.families.find(x=>x.id===S.nav.f);return f?{t,s,f}:null}
+function curFam(){if(!S.nav)return null;const r=findNode(S.nav.f);return r&&r.node.kind==='fam'?{f:r.node,chain:r.chain}:null}
 
 function card(c){const sp=spouseText(c);const n=(c.children||[]).length;
   return `<button class="pcard" data-act="open" data-id="${c.id}">${avatar(c)}
@@ -231,7 +265,7 @@ function renderMain(){
   const kids=(p.children||[]).map(c=>S.persons[c]).filter(Boolean);
   const sons=kids.filter(c=>c.gender!=='f'),daus=kids.filter(c=>c.gender==='f');
   m.innerHTML=`
-  <div class="crumbs" style="color:var(--muted);font-size:13px">${esc(cf.t.name)} ‹ ${esc(cf.s.name)} ‹ ${esc(cf.f.name)}</div>
+  <div class="crumbs" style="color:var(--muted)">${cf.chain.map(n=>esc(n.name)).join(' ‹ ')}</div>
   ${depth>0?`<div class="crumbs">${path.map((pid,i)=>`<button class="crumb ${i===depth?'cur':''}" data-act="goto" data-i="${i}">${i===0?'🏠 ':''}${esc(first(S.persons[pid].name))}</button>`).join('<span class="sep">‹</span>')}</div>`:''}
   <section class="hero">
     <div class="role">${role}</div>
@@ -262,6 +296,22 @@ function ask(title,fields){return new Promise(res=>{ED=null;
   openModal();
   $('#askOk').onclick=()=>{const v=fields.map((f,i)=>$('#ask'+i).value.trim());if(!v[0]){toast('اكتب الاسم');return}closeModal();res(v)};
   $('#askNo').onclick=()=>{closeModal();res(null)}})}
+
+function choose(title,opts){return new Promise(res=>{ED=null;
+  $('#sheet').innerHTML=`<h3>${esc(title)}</h3><div class="chooser">${opts.map(k=>`<button class="btn ghost big" data-k="${k}">＋ ${KN[k]}</button>`).join('')}</div>
+  <div class="mbtns"><button class="btn ghost" id="chNo" style="grid-column:1/-1">إلغاء</button></div>`;openModal();
+  $('#sheet').querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{closeModal();res(b.dataset.k)});
+  $('#chNo').onclick=()=>{closeModal();res(null)}})}
+function editGroup(n,parent){
+  const lo=parent?RANK[parent.kind]:0,hi=Math.min(4,...(n.kids||[]).map(k=>RANK[k.kind]));
+  const kinds=n.kind==='tribe'?[]:['sec','fakh','thawi'].filter(k=>RANK[k]>lo&&RANK[k]<hi);
+  return new Promise(res=>{ED=null;let kind=n.kind;
+    $('#sheet').innerHTML=`<h3>تعديل ${KN[n.kind]}</h3><label class="fl">الاسم<input id="egName" value="${esc(n.name)}"></label>
+    ${kinds.length>1?`<div class="fl">النوع<div class="seg" id="egSeg">${kinds.map(k=>`<button data-k="${k}" class="${k===kind?'on':''}">${KN[k]}</button>`).join('')}</div></div>`:''}
+    <div class="mbtns"><button class="btn" id="egOk">حفظ</button><button class="btn ghost" id="egNo">إلغاء</button></div>`;openModal();
+    const seg=$('#egSeg');if(seg)seg.onclick=e=>{const b=e.target.closest('[data-k]');if(!b)return;kind=b.dataset.k;seg.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))};
+    $('#egOk').onclick=()=>{const v=$('#egName').value.trim();if(!v){toast('اكتب الاسم');return}closeModal();res({name:v,kind})};
+    $('#egNo').onclick=()=>{closeModal();res(null)}})}
 
 /* ========== محرر الشخص ========== */
 function openEditor(o){
@@ -329,35 +379,32 @@ async function saveEditor(){
 
 /* ========== الأحداث ========== */
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-act]');if(!b)return;
-  const {act,t,s,f,id}=b.dataset;const tribe=t&&S.tribes.find(x=>x.id===t);const sec=tribe&&s&&tribe.sections.find(x=>x.id===s);const fam=sec&&f&&sec.families.find(x=>x.id===f);
+  const {act,id}=b.dataset;const r=id&&findNode(id);const node=r&&r.node;
   switch(act){
   case 'menu':return openDrawer();
   case 'close':return closeDrawer();
-  case 'toggle':tribe.open=!tribe.open;save();return renderDrawer();
+  case 'toggle':node.open=!node.open;save();return renderDrawer();
   case 'addTribe':{const v=await ask('قبيلة جديدة',[{label:'اسم القبيلة'}]);if(!v)return;
-    S.tribes.push({id:uid(),name:v[0],open:true,sections:[]});await save();return renderDrawer()}
-  case 'toggleSec':sec.open=!sec.open;save();return renderDrawer();
-  case 'addSec':{const v=await ask('قسم جديد في '+tribe.name,[{label:'اسم القسم'}]);if(!v)return;
-    tribe.sections.push({id:uid(),name:v[0],open:true,families:[]});tribe.open=true;await save();return renderDrawer()}
-  case 'editSec':{const v=await ask('تعديل اسم القسم',[{label:'اسم القسم',value:sec.name}]);if(!v)return;
-    sec.name=v[0];await save();return render()}
-  case 'delSec':{if(!confirm(`حذف قسم «${sec.name}» وجميع عوائله (${sec.families.length})؟ لا يمكن التراجع.`))return;
-    for(const fm of sec.families)await deletePersons(collect(fm.rootId));
-    tribe.sections=tribe.sections.filter(x=>x!==sec);await save();return render()}
-  case 'editTribe':{const v=await ask('تعديل اسم القبيلة',[{label:'اسم القبيلة',value:tribe.name}]);if(!v)return;
-    tribe.name=v[0];await save();return render()}
-  case 'delTribe':{if(!confirm(`حذف قبيلة «${tribe.name}» وجميع أقسامها (${tribe.sections.length}) وعوائلها (${famsOf(tribe).length})؟ لا يمكن التراجع.`))return;
-    for(const fm of famsOf(tribe))await deletePersons(collect(fm.rootId));
-    S.tribes=S.tribes.filter(x=>x!==tribe);await save();return render()}
-  case 'addFam':{const v=await ask('عائلة جديدة في '+sec.name,[{label:'اسم العائلة'},{label:'اسم الأب الكبير (خماسي أو سداسي)',ph:'يمكن إضافته لاحقاً'}]);if(!v)return;
-    const r={id:uid(),name:v[1]||v[0],gender:'m',spouses:[],children:[],photo:null,parent:null};S.persons[r.id]=r;
-    const nf={id:uid(),name:v[0],rootId:r.id};sec.families.push(nf);sec.open=true;tribe.open=true;
-    S.nav={t:tribe.id,s:sec.id,f:nf.id,path:[r.id]};closeDrawer();return go()}
-  case 'editFam':{const v=await ask('تعديل اسم العائلة',[{label:'اسم العائلة',value:fam.name}]);if(!v)return;
-    fam.name=v[0];await save();return render()}
-  case 'delFam':{const n=collect(fam.rootId).length;if(!confirm(`حذف عائلة «${fam.name}» (${n} شخص)؟ لا يمكن التراجع.`))return;
-    await deletePersons(collect(fam.rootId));sec.families=sec.families.filter(x=>x!==fam);await save();return render()}
-  case 'openFam':S.nav={t:tribe.id,s:sec.id,f:fam.id,path:[fam.rootId]};closeDrawer();return go();
+    S.tribes.push({id:uid(),kind:'tribe',name:v[0],open:true,kids:[]});await save();return renderDrawer()}
+  case 'addIn':{const opts=Object.keys(RANK).filter(k=>RANK[k]>RANK[node.kind]);
+    const kind=await choose('إضافة داخل «'+node.name+'»',opts);if(!kind)return;
+    node.kids=node.kids||[];r.chain.forEach(n=>n.open=true);
+    if(kind==='fam'){const v=await ask('عائلة جديدة في '+node.name,[{label:'اسم العائلة'},{label:'اسم الأب الكبير (خماسي أو سداسي)',ph:'يمكن إضافته لاحقاً'}]);if(!v)return;
+      const rp={id:uid(),name:v[1]||v[0],gender:'m',spouses:[],children:[],photo:null,parent:null};S.persons[rp.id]=rp;
+      const nf={id:uid(),kind:'fam',name:v[0],rootId:rp.id};node.kids.push(nf);
+      S.nav={f:nf.id,path:[rp.id]};closeDrawer();return go()}
+    const v=await ask('إضافة '+KN[kind]+' في '+node.name,[{label:'اسم '+KN[kind],ph:kind==='thawi'?'مثال: ذوي عامر':''}]);if(!v)return;
+    node.kids.push({id:uid(),kind,name:v[0],open:true,kids:[]});await save();return renderDrawer()}
+  case 'editNode':{
+    if(node.kind==='fam'){const v=await ask('تعديل اسم العائلة',[{label:'اسم العائلة',value:node.name}]);if(!v)return;node.name=v[0]}
+    else{const v=await editGroup(node,r.chain[r.chain.length-2]);if(!v)return;node.name=v.name;node.kind=v.kind}
+    await save();return render()}
+  case 'delNode':{const fams=allFams(node);const n=fams.reduce((a,f)=>a+collect(f.rootId).length,0);
+    if(!confirm(node.kind==='fam'?`حذف عائلة «${node.name}» (${n} شخص)؟ لا يمكن التراجع.`:`حذف ${KN[node.kind]} «${node.name}» وكل ما بداخله (${fams.length} عائلة، ${n} شخص)؟ لا يمكن التراجع.`))return;
+    for(const f of fams)await deletePersons(collect(f.rootId));
+    const par=r.chain[r.chain.length-2];if(par)par.kids=par.kids.filter(x=>x!==node);else S.tribes=S.tribes.filter(x=>x!==node);
+    await save();return render()}
+  case 'openFam':S.nav={f:node.id,path:[node.rootId]};closeDrawer();return go();
   case 'open':S.nav.path.push(id);return go();
   case 'back':if(S.nav.path.length>1)S.nav.path.pop();return go();
   case 'goto':S.nav.path=S.nav.path.slice(0,+b.dataset.i+1);return go();
