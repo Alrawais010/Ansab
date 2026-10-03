@@ -145,6 +145,25 @@ header h1{font-size:22px;font-weight:800}
 .seg button{font-size:17px;padding:11px}
 .sheet h3{font-size:21px}
 #toast{font-size:16px}
+.sprow select,.fl select{padding:12px 8px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:16px;flex:none}
+.fl select{display:block;width:100%;margin-top:6px;font-size:18px}
+.sprow input{flex:1;min-width:0}
+.fl .sprow select{width:118px;margin-top:0;flex:none}
+.fl .sprow input{width:auto;margin-top:0}
+.st-div{color:var(--danger);font-weight:700}
+.rip{color:#2f6b4f;font-weight:800;font-size:.8em;white-space:nowrap}
+@media (prefers-color-scheme:dark){.rip{color:#7fcf9f}}
+.rip.small{font-size:15px;margin-top:2px}
+.dd{color:var(--muted);font-size:.85em;font-weight:600}
+.dd.big{font-size:17px;margin-bottom:4px}
+.spitem{margin-top:8px}
+.spdate{display:block;width:100%;margin-top:6px;padding:11px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:16px}
+#deadBox input{display:block;width:100%;margin-top:8px}
+.mgroup{border:2px solid var(--line);border-radius:18px;padding:2px 12px 16px;margin-top:20px;background:var(--card)}
+.mhead{font-size:19px;padding:14px 4px 0;line-height:1.6}
+.mhead b{font-weight:900}
+.mgroup .sechead{margin-top:14px}
+.mgroup .sechead h3{font-size:18px}
 </style>
 </head>
 <body>
@@ -204,8 +223,12 @@ function hydrate(root){root.querySelectorAll('img[data-img]').forEach(async el=>
   if(d===undefined){d=await DB.get('img',id);imgCache[id]=d||null}if(d)el.src=d})}
 
 const avatar=(p,cls='')=>`<div class="avatar ${cls}">${p.photo?`<img data-img="${p.photo}" alt="">`:`<span>${esc(first(p.name).slice(0,1)||'؟')}</span>`}</div>`;
-function spouseText(p){const sp=(p.spouses||[]).filter(Boolean);if(!sp.length)return '';
-  const lbl=p.gender==='f'?'زوجها':(sp.length>1?'زوجاته':'زوجته');return {lbl,names:sp.join('، ')}}
+const RIP=g=>g==='f'?'رحمها الله':'رحمه الله';
+const spLabel=(s,g)=>esc(s.name)+(s.status==='div'?` <span class="st-div">(${g==='f'?'مطلق':'مطلقة'})</span>`:'')
+  +(s.status==='dead'?` <span class="rip">${RIP(g==='f'?'m':'f')}</span>${s.death?` <span class="dd">(ت ${esc(s.death)})</span>`:''}`:'');
+const ripTag=p=>p.dead?` <span class="rip">${RIP(p.gender)}</span>`:'';
+function spouseText(p){const sp=(p.spouses||[]).filter(s=>s&&s.name);if(!sp.length)return '';
+  const lbl=p.gender==='f'?'زوجها':(sp.length>1?'زوجاته':'زوجته');return {lbl,names:sp.map(s=>spLabel(s,p.gender)).join('، ')}}
 
 function collect(id,out=[]){const p=S.persons[id];if(!p)return out;out.push(id);(p.children||[]).forEach(c=>collect(c,out));return out}
 async function deletePersons(ids){for(const id of ids){const p=S.persons[id];if(p&&p.photo){await DB.del('img',p.photo);delete imgCache[p.photo]}delete S.persons[id]}}
@@ -219,6 +242,7 @@ function migrate(){S.tribes=S.tribes||[];S.persons=S.persons||{};
     if(!t.kids){const secs=t.sections||(t.families&&t.families.length?[{id:uid(),name:'عام',open:true,families:t.families}]:[]);
       t.kids=secs.map(s=>({id:s.id,kind:'sec',name:s.name,open:s.open!==false,kids:(s.families||[]).map(f=>({id:f.id,kind:'fam',name:f.name,rootId:f.rootId}))}))}
     delete t.sections;delete t.families});
+  Object.values(S.persons).forEach(p=>{p.spouses=(p.spouses||[]).filter(Boolean).map(s=>typeof s==='string'?{id:uid(),name:s,status:''}:s)});
   if(S.nav&&!findNode(S.nav.f))S.nav=null}
 
 /* ========== القائمة ========== */
@@ -249,8 +273,8 @@ function curFam(){if(!S.nav)return null;const r=findNode(S.nav.f);return r&&r.no
 
 function card(c){const sp=spouseText(c);const n=(c.children||[]).length;
   return `<button class="pcard" data-act="open" data-id="${c.id}">${avatar(c)}
-    <div class="pname">${esc(c.name)}</div>
-    ${sp?`<div class="psp">${sp.lbl}: ${esc(sp.names)}</div>`:''}
+    <div class="pname">${esc(c.name)}${c.dead?`<div class="rip small">${RIP(c.gender)}</div>`:""}</div>
+    ${sp?`<div class="psp">${sp.lbl}: ${sp.names}</div>`:''}
     ${n?`<div class="pkids">${n} من الأولاد ‹</div>`:''}</button>`}
 
 function renderMain(){
@@ -263,25 +287,32 @@ function renderMain(){
   const role=depth===0?'الأب الكبير':`${p.gender==='f'?'بنت':'ابن'} ${esc(first(S.persons[path[depth-1]].name))}`;
   const sp=spouseText(p);
   const kids=(p.children||[]).map(c=>S.persons[c]).filter(Boolean);
-  const sons=kids.filter(c=>c.gender!=='f'),daus=kids.filter(c=>c.gender==='f');
+  const sps=(p.spouses||[]).filter(s=>s.name);
+  const block=(list,mid)=>{const sons=list.filter(c=>c.gender!=='f'),daus=list.filter(c=>c.gender==='f');
+    return `<div class="sechead"><h3>الأبناء <small>(${sons.length})</small></h3><button class="btn small" data-act="addChild" data-g="m" data-m="${mid}">＋ ابن</button></div>
+    <div class="grid">${sons.map(card).join('')||'<p class="empty">لا يوجد أبناء مسجّلون</p>'}</div>
+    <div class="sechead"><h3>البنات <small>(${daus.length})</small></h3><button class="btn small" data-act="addChild" data-g="f" data-m="${mid}">＋ بنت</button></div>
+    <div class="grid">${daus.map(card).join('')||'<p class="empty">لا توجد بنات مسجّلات</p>'}</div>`};
+  let kidsHtml;
+  if(sps.length<2&&!kids.some(k=>k.mother&&sps.some(s=>s.id===k.mother)))kidsHtml=block(kids,sps[0]?sps[0].id:'');
+  else{const other=kids.filter(k=>!sps.some(s=>s.id===k.mother));
+    kidsHtml=sps.map(s=>`<div class="mgroup"><div class="mhead">${p.gender==='f'?'أولادها من':'أولاده من'}: <b>${spLabel(s,p.gender)}</b></div>${block(kids.filter(k=>k.mother===s.id),s.id)}</div>`).join('')
+      +(other.length?`<div class="mgroup"><div class="mhead"><b>${p.gender==='f'?'الأب غير محدد':'الأم غير محددة'}</b></div>${block(other,'')}</div>`:'')}
   m.innerHTML=`
   <div class="crumbs" style="color:var(--muted)">${cf.chain.map(n=>esc(n.name)).join(' ‹ ')}</div>
   ${depth>0?`<div class="crumbs">${path.map((pid,i)=>`<button class="crumb ${i===depth?'cur':''}" data-act="goto" data-i="${i}">${i===0?'🏠 ':''}${esc(first(S.persons[pid].name))}</button>`).join('<span class="sep">‹</span>')}</div>`:''}
   <section class="hero">
     <div class="role">${role}</div>
     ${avatar(p,'big')}
-    <h2 class="fullname">${esc(p.name)}</h2>
-    ${sp?`<div class="spouses">${sp.lbl}: <b>${esc(sp.names)}</b></div>`:''}
+    <h2 class="fullname">${esc(p.name)}${ripTag(p)}</h2>${p.dead&&p.death?`<div class="dd big">تاريخ الوفاة: ${esc(p.death)}</div>`:""}
+    ${sp?`<div class="spouses">${sp.lbl}: <b>${sp.names}</b></div>`:''}
     <div class="hbtns">
       ${depth>0?`<button class="btn ghost small" data-act="back">→ رجوع</button>`:''}
       <button class="btn ghost small" data-act="edit" data-id="${p.id}">✎ تعديل</button>
       ${depth>1?`<button class="btn ghost small" data-act="goto" data-i="0">🏠 الأب الكبير</button>`:''}
     </div>
   </section>
-  <div class="sechead"><h3>الأبناء <small>(${sons.length})</small></h3><button class="btn small" data-act="addChild" data-g="m">＋ ابن</button></div>
-  <div class="grid">${sons.map(card).join('')||'<p class="empty">لا يوجد أبناء مسجّلون</p>'}</div>
-  <div class="sechead"><h3>البنات <small>(${daus.length})</small></h3><button class="btn small" data-act="addChild" data-g="f">＋ بنت</button></div>
-  <div class="grid">${daus.map(card).join('')||'<p class="empty">لا توجد بنات مسجّلات</p>'}</div>`;
+  ${kidsHtml}`;
   hydrate(m);
 }
 function render(){renderDrawer();renderMain()}
@@ -316,8 +347,10 @@ function editGroup(n,parent){
 /* ========== محرر الشخص ========== */
 function openEditor(o){
   const p=o.id?S.persons[o.id]:{name:'',gender:o.gender||'m',spouses:[],photo:null};
-  ED={...o,photo:undefined,orig:p.photo,gender:p.gender||'m',spouses:[...(p.spouses||[])]};
-  if(!ED.spouses.length)ED.spouses=[''];
+  ED={...o,photo:undefined,orig:p.photo,gender:p.gender||'m',spouses:(p.spouses||[]).map(s=>({...s}))};
+  if(!ED.spouses.length)ED.spouses=[{id:uid(),name:'',status:''}];
+  const par=S.persons[o.parentId||p.parent];const psps=par?(par.spouses||[]).filter(s=>s.name):[];
+  ED.mother=o.id?(p.mother||''):(o.mother||(psps.length===1?psps[0].id:''));
   const root=o.id&&isRootId(o.id);
   $('#sheet').innerHTML=`<h3>${o.id?'تعديل البيانات':'إضافة '+(o.gender==='f'?'بنت':'ابن')}</h3>
   <div class="ephoto"><div id="edAv"></div>
@@ -327,21 +360,29 @@ function openEditor(o){
       <button class="btn small ghost" data-ed="rmphoto">إزالة الصورة</button>
     </div></div>
   <label class="fl">${root?'الاسم الخماسي أو السداسي':'الاسم'}<textarea id="edName" rows="2">${esc(p.name)}</textarea></label>
-  ${root?'':`<div class="seg"><button data-ed="g" data-g="m" class="${ED.gender!=='f'?'on':''}">ذكر</button><button data-ed="g" data-g="f" class="${ED.gender==='f'?'on':''}">أنثى</button></div>`}
+  ${psps.length?`<label class="fl">${par.gender==='f'?'الأب':'الأم'}<select id="edMother"><option value="">غير محدد</option>${psps.map(s=>`<option value="${s.id}" ${s.id===ED.mother?'selected':''}>${esc(s.name)}</option>`).join('')}</select></label>`:''}
+  <div id="deadBox"></div>
+  ${root?'':`<div class="seg" id="gSeg"><button data-ed="g" data-g="m" class="${ED.gender!=='f'?'on':''}">ذكر</button><button data-ed="g" data-g="f" class="${ED.gender==='f'?'on':''}">أنثى</button></div>`}
   <div class="fl"><span id="spLbl"></span><div id="spList"></div>
     <button class="btn small ghost" data-ed="addSp" style="margin-top:8px">＋ إضافة</button></div>
   <div class="mbtns"><button class="btn" data-ed="save">حفظ</button><button class="btn ghost" data-ed="cancel">إلغاء</button>
     ${o.id&&!root?`<button class="btn danger" data-ed="del">🗑 حذف</button>`:''}</div>`;
   $('#edFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{setEdPhoto(await resize(f))}catch{toast('تعذّر فتح الصورة')}e.target.value=''};
-  renderEdPhoto();renderSp();openModal();
+  ED.dead=!!p.dead;ED.death=p.death||'';
+  $('#spList').onchange=e=>{if(e.target.tagName==='SELECT'){syncSp();renderSp()}};
+  renderEdPhoto();renderSp();renderDead();openModal();
 }
 function renderEdPhoto(){const ph=ED.photo===undefined?ED.orig:(ED.photo==='remove'?null:'__new');
   const name=$('#edName')?$('#edName').value:'';
   $('#edAv').innerHTML=ph==='__new'?`<div class="avatar big"><img src="${ED.photo}" alt=""></div>`:avatar({photo:ph,name},'big');hydrate($('#edAv'))}
 function setEdPhoto(d){ED.photo=d;renderEdPhoto();toast('تمت إضافة الصورة')}
-function syncSp(){ED.spouses=[...document.querySelectorAll('#spList input')].map(i=>i.value)}
+function syncSp(){ED.spouses=[...document.querySelectorAll('#spList .spitem')].map((r,i)=>{const d=r.querySelector('.spdate');
+  return {...ED.spouses[i],name:r.querySelector('.spname').value,status:r.querySelector('select').value,death:d?d.value.trim():(ED.spouses[i].death||'')}})}
+function syncDead(){const d=$('#edDeath');if(d)ED.death=d.value.trim()}
+function renderDead(){$('#deadBox').innerHTML=`<div class="fl">الحالة<div class="seg" id="dSeg"><button data-ed="dead" data-v="0" class="${ED.dead?'':'on'}">على قيد الحياة</button><button data-ed="dead" data-v="1" class="${ED.dead?'on':''}">${RIP(ED.gender)}</button></div>
+  ${ED.dead?`<input id="edDeath" value="${esc(ED.death)}" placeholder="تاريخ الوفاة (اختياري) مثال: ١٤٤٥/٣/١٢هـ">`:''}</div>`}
 function renderSp(){$('#spLbl').textContent=ED.gender==='f'?'الزوج':'الزوجة / الزوجات';
-  $('#spList').innerHTML=ED.spouses.map((s,i)=>`<div class="sprow"><input value="${esc(s)}" placeholder="${ED.gender==='f'?'اسم الزوج':'اسم الزوجة'}"><button class="mini" data-ed="rmSp" data-i="${i}">✕</button></div>`).join('')}
+  $('#spList').innerHTML=ED.spouses.map((s,i)=>`<div class="spitem"><div class="sprow"><input class="spname" value="${esc(s.name)}" placeholder="${ED.gender==='f'?'اسم الزوج':'اسم الزوجة'}"><select>${(ED.gender==='f'?[['','قائم'],['div','مطلق'],['dead','رحمه الله']]:[['','على ذمته'],['div','مطلقة'],['dead','رحمها الله']]).map(([v,l])=>`<option value="${v}" ${s.status===v?'selected':''}>${l}</option>`).join('')}</select><button class="mini" data-ed="rmSp" data-i="${i}">✕</button></div>${s.status==='dead'?`<input class="spdate" value="${esc(s.death||'')}" placeholder="${ED.gender==='f'?'تاريخ وفاته':'تاريخ وفاتها'} (اختياري)">`:''}</div>`).join('')}
 
 async function pasteImage(){
   try{const items=await navigator.clipboard.read();
@@ -353,9 +394,10 @@ document.addEventListener('paste',e=>{if(!ED)return;const it=[...(e.clipboardDat
 $('#sheet').addEventListener('click',async e=>{const b=e.target.closest('[data-ed]');if(!b||!ED)return;const a=b.dataset.ed;
   if(a==='paste')return pasteImage();
   if(a==='rmphoto'){ED.photo='remove';renderEdPhoto();return}
-  if(a==='g'){syncSp();ED.gender=b.dataset.g;document.querySelectorAll('.seg button').forEach(x=>x.classList.toggle('on',x===b));renderSp();return}
-  if(a==='addSp'){syncSp();ED.spouses.push('');renderSp();const ins=document.querySelectorAll('#spList input');ins[ins.length-1].focus();return}
-  if(a==='rmSp'){syncSp();ED.spouses.splice(+b.dataset.i,1);if(!ED.spouses.length)ED.spouses=[''];renderSp();return}
+  if(a==='g'){syncSp();syncDead();ED.gender=b.dataset.g;document.querySelectorAll('#gSeg button').forEach(x=>x.classList.toggle('on',x===b));renderSp();renderDead();return}
+  if(a==='dead'){syncDead();ED.dead=b.dataset.v==='1';renderDead();if(ED.dead)$('#edDeath').focus();return}
+  if(a==='addSp'){syncSp();ED.spouses.push({id:uid(),name:'',status:''});renderSp();const ins=document.querySelectorAll('#spList input');ins[ins.length-1].focus();return}
+  if(a==='rmSp'){syncSp();ED.spouses.splice(+b.dataset.i,1);if(!ED.spouses.length)ED.spouses=[{id:uid(),name:'',status:''}];renderSp();return}
   if(a==='cancel')return closeModal();
   if(a==='save')return saveEditor();
   if(a==='del'){const p=S.persons[ED.id];const ids=collect(p.id);
@@ -366,11 +408,11 @@ $('#sheet').addEventListener('click',async e=>{const b=e.target.closest('[data-e
 
 async function saveEditor(){
   const name=$('#edName').value.trim();if(!name){toast('اكتب الاسم');return}
-  syncSp();const spouses=ED.spouses.map(s=>s.trim()).filter(Boolean);
+  syncSp();const spouses=ED.spouses.map(s=>({...s,name:s.name.trim()})).filter(s=>s.name);
   let p;
   if(ED.id)p=S.persons[ED.id];
   else{p={id:uid(),name:'',gender:ED.gender,spouses:[],children:[],photo:null,parent:ED.parentId};S.persons[p.id]=p;S.persons[ED.parentId].children.push(p.id)}
-  p.name=name;p.gender=ED.gender;p.spouses=spouses;
+  syncDead();p.name=name;p.gender=ED.gender;p.spouses=spouses;p.dead=ED.dead;p.death=ED.dead?ED.death:'';if($('#edMother'))p.mother=$('#edMother').value;
   if(ED.photo!==undefined){
     if(p.photo){await DB.del('img',p.photo);delete imgCache[p.photo];p.photo=null}
     if(ED.photo!=='remove'){const iid=uid();await DB.put('img',iid,ED.photo);imgCache[iid]=ED.photo;p.photo=iid}}
@@ -409,7 +451,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-act]
   case 'back':if(S.nav.path.length>1)S.nav.path.pop();return go();
   case 'goto':S.nav.path=S.nav.path.slice(0,+b.dataset.i+1);return go();
   case 'edit':return openEditor({id});
-  case 'addChild':return openEditor({parentId:S.nav.path[S.nav.path.length-1],gender:b.dataset.g});
+  case 'addChild':return openEditor({parentId:S.nav.path[S.nav.path.length-1],gender:b.dataset.g,mother:b.dataset.m||''});
   case 'backup':return backup();
   case 'restore':return $('#restoreFile').click();
   }
