@@ -183,6 +183,7 @@ header h1{font-size:22px;font-weight:800}
       <button class="btn ghost small" data-act="backup">💾 نسخة احتياطية</button>
       <button class="btn ghost small" data-act="restore">📂 استعادة</button>
     </div>
+    <div style="text-align:center;color:var(--muted);font-size:14px">الإصدار ٦</div>
     <input type="file" id="restoreFile" accept=".json,application/json" hidden>
   </div>
 </aside>
@@ -481,7 +482,7 @@ $('#restoreFile').onchange=async e=>{const f=e.target.files[0];e.target.value=''
   migrate();
   if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
   render();if(!curFam())openDrawer();
-  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).catch(()=>{});
 })();
 </script>
 </body>
