@@ -145,6 +145,8 @@ header h1{font-size:22px;font-weight:800}
 .seg button{font-size:17px;padding:11px}
 .sheet h3{font-size:21px}
 #toast{font-size:16px}
+#sortBtn.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.mini.mv{background:var(--card);border:1px solid var(--line);color:var(--acc);font-size:16px;margin-inline-start:4px}
 .sprow select,.fl select{padding:12px 8px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:16px;flex:none}
 .fl select{display:block;width:100%;margin-top:6px;font-size:18px}
 .sprow input{flex:1;min-width:0}
@@ -175,7 +177,7 @@ header h1{font-size:22px;font-weight:800}
 
 <div id="scrim"></div>
 <aside id="drawer">
-  <div class="dhead"><h2>🌳 القبائل</h2><button class="iconbtn" data-act="close" aria-label="إغلاق">✕</button></div>
+  <div class="dhead"><h2>🌳 القبائل</h2><button class="btn ghost small" id="sortBtn" data-act="sortMode">↕ ترتيب</button><button class="iconbtn" data-act="close" aria-label="إغلاق">✕</button></div>
   <div id="tribes"></div>
   <div class="dfoot">
     <button class="btn" data-act="addTribe">＋ إضافة قبيلة</button>
@@ -183,7 +185,7 @@ header h1{font-size:22px;font-weight:800}
       <button class="btn ghost small" data-act="backup">💾 نسخة احتياطية</button>
       <button class="btn ghost small" data-act="restore">📂 استعادة</button>
     </div>
-    <div style="text-align:center;color:var(--muted);font-size:14px">الإصدار ٧</div>
+    <div style="text-align:center;color:var(--muted);font-size:14px">الإصدار ٨</div>
     <input type="file" id="restoreFile" accept=".json,application/json" hidden>
   </div>
 </aside>
@@ -251,17 +253,17 @@ function openDrawer(){$('#drawer').classList.add('open');$('#scrim').classList.a
 function closeDrawer(){$('#drawer').classList.remove('open');$('#scrim').classList.remove('show')}
 $('#scrim').onclick=closeDrawer;
 
+let SORT=false;
+const tools=n=>SORT?`<button class="mini mv" data-act="mvUp" data-id="${n.id}" aria-label="رفع">▲</button><button class="mini mv" data-act="mvDn" data-id="${n.id}" aria-label="تنزيل">▼</button>`
+  :`<button class="mini" data-act="editNode" data-id="${n.id}" aria-label="تعديل">✎</button><button class="mini" data-act="delNode" data-id="${n.id}" aria-label="حذف">🗑</button>`;
 function nodeHtml(n){
   if(n.kind==='fam')return `<div class="frow ${S.nav&&S.nav.f===n.id?'cur':''}">
     <button class="fname" data-act="openFam" data-id="${n.id}">${esc(n.name)}</button>
-    <button class="mini" data-act="editNode" data-id="${n.id}" aria-label="تعديل">✎</button>
-    <button class="mini" data-act="delNode" data-id="${n.id}" aria-label="حذف">🗑</button></div>`;
+    ${tools(n)}</div>`;
   const kids=n.kids||[];
   return `<div class="grp g-${n.kind}"><div class="grow">
     <button class="gname" data-act="toggle" data-id="${n.id}"><span class="chev">${n.open?'▾':'◂'}</span>${n.kind!=='tribe'?`<span class="kb">${KN[n.kind]}</span>`:''}<span>${esc(n.name)}</span><small>(${allFams(n).length})</small></button>
-    <button class="mini" data-act="addIn" data-id="${n.id}" aria-label="إضافة">＋</button>
-    <button class="mini" data-act="editNode" data-id="${n.id}" aria-label="تعديل">✎</button>
-    <button class="mini" data-act="delNode" data-id="${n.id}" aria-label="حذف">🗑</button></div>
+    ${SORT?'':`<button class="mini" data-act="addIn" data-id="${n.id}" aria-label="إضافة">＋</button>`}${tools(n)}</div>
     ${n.open?`<div class="gkids">${kids.map(nodeHtml).join('')||'<div class="nofam">فارغ — اضغط ＋ لإضافة قسم أو فخذ أو ذوي أو عائلة</div>'}</div>`:''}</div>`}
 function renderDrawer(){
   const list=$('#tribes');
@@ -447,6 +449,10 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-act]
     for(const f of fams)await deletePersons(collect(f.rootId));
     const par=r.chain[r.chain.length-2];if(par)par.kids=par.kids.filter(x=>x!==node);else S.tribes=S.tribes.filter(x=>x!==node);
     await save();return render()}
+  case 'sortMode':SORT=!SORT;$('#sortBtn').classList.toggle('on',SORT);$('#sortBtn').textContent=SORT?'✓ تم':'↕ ترتيب';if(SORT)toast('استخدم ▲ ▼ لتغيير الترتيب');return renderDrawer();
+  case 'mvUp':case 'mvDn':{const par=r.chain[r.chain.length-2];const arr=par?par.kids:S.tribes;const i=arr.indexOf(node),j=act==='mvUp'?i-1:i+1;
+    if(j<0||j>=arr.length)return;[arr[i],arr[j]]=[arr[j],arr[i]];await save();renderDrawer();
+    const el=document.querySelector(`[data-act="${act}"][data-id="${node.id}"]`);if(el)el.scrollIntoView({block:'nearest'});return}
   case 'openFam':S.nav={f:node.id,path:[node.rootId]};closeDrawer();return go();
   case 'open':S.nav.path.push(id);return go();
   case 'back':if(S.nav.path.length>1)S.nav.path.pop();return go();
