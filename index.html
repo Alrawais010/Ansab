@@ -183,7 +183,7 @@ header h1{font-size:22px;font-weight:800}
       <button class="btn ghost small" data-act="backup">💾 نسخة احتياطية</button>
       <button class="btn ghost small" data-act="restore">📂 استعادة</button>
     </div>
-    <div style="text-align:center;color:var(--muted);font-size:14px">الإصدار ٦</div>
+    <div style="text-align:center;color:var(--muted);font-size:14px">الإصدار ٧</div>
     <input type="file" id="restoreFile" accept=".json,application/json" hidden>
   </div>
 </aside>
@@ -291,9 +291,9 @@ function renderMain(){
   const sps=(p.spouses||[]).filter(s=>s.name);
   const block=(list,mid)=>{const sons=list.filter(c=>c.gender!=='f'),daus=list.filter(c=>c.gender==='f');
     return `<div class="sechead"><h3>الأبناء <small>(${sons.length})</small></h3><button class="btn small" data-act="addChild" data-g="m" data-m="${mid}">＋ ابن</button></div>
-    <div class="grid">${sons.map(card).join('')||'<p class="empty">لا يوجد أبناء مسجّلون</p>'}</div>
+    ${sons.length?`<div class="grid">${sons.map(card).join('')}</div>`:''}
     <div class="sechead"><h3>البنات <small>(${daus.length})</small></h3><button class="btn small" data-act="addChild" data-g="f" data-m="${mid}">＋ بنت</button></div>
-    <div class="grid">${daus.map(card).join('')||'<p class="empty">لا توجد بنات مسجّلات</p>'}</div>`};
+    ${daus.length?`<div class="grid">${daus.map(card).join('')}</div>`:''}`};
   let kidsHtml;
   if(sps.length<2&&!kids.some(k=>k.mother&&sps.some(s=>s.id===k.mother)))kidsHtml=block(kids,sps[0]?sps[0].id:'');
   else{const other=kids.filter(k=>!sps.some(s=>s.id===k.mother));
