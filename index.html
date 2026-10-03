@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="أنسابي">
+<meta name="theme-color" content="#f6f1e7">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>أنسابي</title>
+<style>
+:root{--bg:#f6f1e7;--card:#fffdf8;--ink:#2b2418;--muted:#7a6e5c;--line:#e6dccb;--acc:#8a5a2b;--acc-soft:#f1e3d0;--danger:#b3412e;--shadow:0 2px 10px rgba(60,40,10,.08)}
+@media (prefers-color-scheme:dark){:root{--bg:#1a1714;--card:#25211c;--ink:#f1e9dc;--muted:#a89a85;--line:#3a332b;--acc:#d39a5c;--acc-soft:#3a2d20;--danger:#e0725f;--shadow:0 2px 10px rgba(0,0,0,.3)}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"SF Arabic","Geeza Pro",system-ui,sans-serif;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;cursor:pointer}
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(env(safe-area-inset-top) + 8px) 14px 10px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line)}
+header h1{font-size:19px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{background:var(--card);width:42px;height:42px;border-radius:12px;font-size:20px;border:1px solid var(--line);flex:none}
+main{padding:14px 14px calc(env(safe-area-inset-bottom) + 40px);max-width:760px;margin:0 auto}
+
+/* القائمة الجانبية (يمين) */
+#drawer{position:fixed;top:0;bottom:0;right:0;width:min(86vw,340px);background:var(--card);z-index:20;transform:translateX(105%);transition:transform .25s ease;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);box-shadow:-6px 0 24px rgba(0,0,0,.18)}
+#drawer.open{transform:none}
+#scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:15;opacity:0;pointer-events:none;transition:opacity .25s}
+#scrim.show{opacity:1;pointer-events:auto}
+.dhead{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.dhead h2{margin:0;font-size:18px;flex:1}
+#tribes{flex:1;overflow-y:auto;padding:8px 8px 20px;-webkit-overflow-scrolling:touch}
+.tribe{margin-bottom:6px;border-radius:14px;background:var(--bg);border:1px solid var(--line);overflow:hidden}
+.trow,.frow{display:flex;align-items:center;gap:4px;padding:4px 6px}
+.tname{flex:1;text-align:right;background:none;border:none;font-weight:700;font-size:16px;padding:10px 6px;display:flex;gap:6px;align-items:center}
+.tname small{color:var(--muted);font-weight:400}
+.chev{color:var(--acc);width:14px;display:inline-block}
+.secs{border-top:1px solid var(--line);background:var(--card);padding:4px 0}
+.sec{margin:2px 6px 4px;border-radius:12px;border:1px solid var(--line);overflow:hidden}
+.srow{display:flex;align-items:center;gap:2px;padding:2px 4px;background:var(--acc-soft)}
+.sname{flex:1;text-align:right;background:none;border:none;font-weight:600;font-size:15px;padding:9px 6px;display:flex;gap:6px;align-items:center;color:var(--acc)}
+.sname small{color:var(--muted);font-weight:400}
+.fams{background:var(--card);padding:2px 0}
+.frow{padding:2px 6px 2px 6px}
+.frow.cur .fname{color:var(--acc);font-weight:700}
+.fname{flex:1;text-align:right;background:none;border:none;padding:10px 26px 10px 6px;font-size:15px;position:relative}
+.fname:before{content:"•";position:absolute;right:10px;color:var(--muted)}
+.mini{background:none;border:none;width:34px;height:34px;border-radius:10px;font-size:15px;color:var(--muted);flex:none}
+.mini:active{background:var(--acc-soft)}
+.nofam{color:var(--muted);font-size:13px;padding:8px 16px}
+.dfoot{border-top:1px solid var(--line);padding:10px 12px calc(env(safe-area-inset-bottom) + 12px);display:grid;gap:8px}
+.dfoot .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+.btn{background:var(--acc);color:#fff;border:none;border-radius:12px;padding:11px 14px;font-size:15px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.btn.danger{background:var(--danger)}
+.btn.small{padding:8px 12px;font-size:14px}
+.btn:active{opacity:.8}
+.empty{color:var(--muted);text-align:center;line-height:1.8;padding:20px}
+
+.welcome{text-align:center;padding:60px 20px}
+.wicon{font-size:64px}
+.welcome p{color:var(--muted)}
+
+.crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-bottom:12px}
+.crumb{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:5px 11px;font-size:13px}
+.crumb.cur{background:var(--acc);color:#fff;border-color:var(--acc)}
+.sep{color:var(--muted)}
+
+.hero{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px 16px;text-align:center;box-shadow:var(--shadow)}
+.role{display:inline-block;background:var(--acc-soft);color:var(--acc);font-size:13px;font-weight:700;border-radius:20px;padding:4px 12px;margin-bottom:12px}
+.fullname{font-size:20px;margin:12px 0 6px;line-height:1.6}
+.spouses{color:var(--muted);font-size:14px;line-height:1.8}
+.spouses b{color:var(--ink);font-weight:600}
+.hbtns{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px}
+
+.avatar{width:86px;height:86px;border-radius:50%;background:var(--acc-soft);color:var(--acc);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;overflow:hidden;margin:0 auto;border:3px solid var(--card);box-shadow:0 0 0 1px var(--line)}
+.avatar.big{width:140px;height:140px;font-size:52px}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+
+.sechead{display:flex;align-items:center;justify-content:space-between;margin:22px 2px 10px}
+.sechead h3{margin:0;font-size:17px}
+.sechead h3 small{color:var(--muted);font-weight:400;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.pcard{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 8px 12px;text-align:center;box-shadow:var(--shadow)}
+.pcard:active{transform:scale(.98)}
+.pname{font-weight:700;margin-top:8px;font-size:15px;line-height:1.5}
+.psp{color:var(--muted);font-size:12.5px;margin-top:4px;line-height:1.6}
+.pkids{color:var(--acc);font-size:12.5px;margin-top:6px;font-weight:600}
+.grid .empty{grid-column:1/-1;padding:8px}
+
+/* النوافذ */
+.modal{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.4);display:none;align-items:flex-end;justify-content:center}
+.modal.show{display:flex}
+.sheet{background:var(--card);width:100%;max-width:560px;border-radius:22px 22px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom) + 18px);max-height:92vh;overflow-y:auto}
+.sheet h3{margin:0 0 14px;text-align:center}
+.fl{display:block;margin:12px 0;font-size:14px;color:var(--muted)}
+.fl input,.fl textarea{display:block;width:100%;margin-top:6px;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:16px;resize:vertical}
+.ephoto{text-align:center}
+.pbtns{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px}
+.seg{display:flex;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:3px;margin:12px 0}
+.seg button{flex:1;border:none;background:none;padding:9px;border-radius:10px;font-weight:600}
+.seg button.on{background:var(--acc);color:#fff}
+.sprow{display:flex;gap:6px;align-items:center;margin-top:6px}
+.sprow input{margin-top:0}
+.mbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}
+.mbtns .danger{grid-column:1/-1}
+
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 24px);transform:translateX(-50%) translateY(20px);background:#2b2418;color:#fff;padding:10px 18px;border-radius:20px;font-size:14px;opacity:0;transition:.25s;z-index:50;pointer-events:none;white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<header>
+  <button class="iconbtn" data-act="menu" aria-label="القائمة">☰</button>
+  <h1 id="title">أنسابي</h1>
+</header>
+<main id="main"></main>
+
+<div id="scrim"></div>
+<aside id="drawer">
+  <div class="dhead"><h2>🌳 القبائل</h2><button class="iconbtn" data-act="close" aria-label="إغلاق">✕</button></div>
+  <div id="tribes"></div>
+  <div class="dfoot">
+    <button class="btn" data-act="addTribe">＋ إضافة قبيلة</button>
+    <div class="row">
+      <button class="btn ghost small" data-act="backup">💾 نسخة احتياطية</button>
+      <button class="btn ghost small" data-act="restore">📂 استعادة</button>
+    </div>
+    <input type="file" id="restoreFile" accept=".json,application/json" hidden>
+  </div>
+</aside>
+
+<div id="modal" class="modal"><div class="sheet" id="sheet"></div></div>
+<div id="toast"></div>
+
+<script>
+/* ========== التخزين (IndexedDB) ========== */
+const DB={db:null,
+  open(){return new Promise((res,rej)=>{const r=indexedDB.open('ansabi',1);r.onupgradeneeded=()=>{const d=r.result;d.createObjectStore('kv');d.createObjectStore('img')};r.onsuccess=()=>{this.db=r.result;res()};r.onerror=()=>rej(r.error)})},
+  req(store,mode,fn){return new Promise((res,rej)=>{const tx=this.db.transaction(store,mode);const r=fn(tx.objectStore(store));tx.oncomplete=()=>res(r&&r.result);tx.onerror=()=>rej(tx.error)})},
+  get(s,k){return this.req(s,'readonly',o=>o.get(k))},
+  put(s,k,v){return this.req(s,'readwrite',o=>o.put(v,k))},
+  del(s,k){return this.req(s,'readwrite',o=>o.delete(k))},
+  keys(s){return this.req(s,'readonly',o=>o.getAllKeys())},
+  clear(s){return this.req(s,'readwrite',o=>o.clear())}
+};
+
+/* ========== أدوات ========== */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+const first=n=>(n||'').trim().split(/\s+/)[0]||'';
+let S={tribes:[],persons:{},nav:null};
+const imgCache={};
+let ED=null;
+
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2200)}
+async function save(){try{await DB.put('kv','state',S)}catch(e){toast('تعذّر الحفظ!')}}
+
+function resize(blob,max=520){return new Promise((res,rej)=>{const u=URL.createObjectURL(blob);const im=new Image();
+  im.onload=()=>{let w=im.naturalWidth,h=im.naturalHeight;const s=Math.min(1,max/Math.max(w,h));w=Math.round(w*s);h=Math.round(h*s);
+    const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);URL.revokeObjectURL(u);res(c.toDataURL('image/jpeg',.82))};
+  im.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('img'))};im.src=u})}
+
+function hydrate(root){root.querySelectorAll('img[data-img]').forEach(async el=>{const id=el.dataset.img;let d=imgCache[id];
+  if(d===undefined){d=await DB.get('img',id);imgCache[id]=d||null}if(d)el.src=d})}
+
+const avatar=(p,cls='')=>`<div class="avatar ${cls}">${p.photo?`<img data-img="${p.photo}" alt="">`:`<span>${esc(first(p.name).slice(0,1)||'؟')}</span>`}</div>`;
+function spouseText(p){const sp=(p.spouses||[]).filter(Boolean);if(!sp.length)return '';
+  const lbl=p.gender==='f'?'زوجها':(sp.length>1?'زوجاته':'زوجته');return {lbl,names:sp.join('، ')}}
+
+function collect(id,out=[]){const p=S.persons[id];if(!p)return out;out.push(id);(p.children||[]).forEach(c=>collect(c,out));return out}
+async function deletePersons(ids){for(const id of ids){const p=S.persons[id];if(p&&p.photo){await DB.del('img',p.photo);delete imgCache[p.photo]}delete S.persons[id]}}
+const famsOf=t=>t.sections.flatMap(s=>s.families);
+function isRootId(id){return S.tribes.some(t=>famsOf(t).some(f=>f.rootId===id))}
+function migrate(){S.tribes=S.tribes||[];S.persons=S.persons||{};
+  S.tribes.forEach(t=>{if(!t.sections){t.sections=t.families&&t.families.length?[{id:uid(),name:'عام',open:true,families:t.families}]:[]}delete t.families;
+    t.sections.forEach(s=>{s.families=s.families||[]})});
+  if(S.nav&&!S.nav.s){const t=S.tribes.find(x=>x.id===S.nav.t);const s=t&&t.sections.find(x=>x.families.some(f=>f.id===S.nav.f));S.nav=s?{...S.nav,s:s.id}:null}}
+
+/* ========== القائمة ========== */
+function openDrawer(){$('#drawer').classList.add('open');$('#scrim').classList.add('show')}
+function closeDrawer(){$('#drawer').classList.remove('open');$('#scrim').classList.remove('show')}
+$('#scrim').onclick=closeDrawer;
+
+function renderDrawer(){
+  const list=$('#tribes');
+  if(!S.tribes.length){list.innerHTML='<p class="empty">لا توجد قبائل بعد.<br>اضغط «إضافة قبيلة» للبدء.</p>';return}
+  list.innerHTML=S.tribes.map(t=>`<div class="tribe">
+    <div class="trow">
+      <button class="tname" data-act="toggle" data-t="${t.id}"><span class="chev">${t.open?'▾':'◂'}</span>${esc(t.name)} <small>(${t.sections.length})</small></button>
+      <button class="mini" data-act="addSec" data-t="${t.id}" aria-label="إضافة قسم">＋</button>
+      <button class="mini" data-act="editTribe" data-t="${t.id}" aria-label="تعديل">✎</button>
+      <button class="mini" data-act="delTribe" data-t="${t.id}" aria-label="حذف">🗑</button>
+    </div>
+    ${t.open?`<div class="secs">${t.sections.map(s=>`<div class="sec">
+      <div class="srow">
+        <button class="sname" data-act="toggleSec" data-t="${t.id}" data-s="${s.id}"><span class="chev">${s.open?'▾':'◂'}</span>${esc(s.name)} <small>(${s.families.length})</small></button>
+        <button class="mini" data-act="addFam" data-t="${t.id}" data-s="${s.id}" aria-label="إضافة عائلة">＋</button>
+        <button class="mini" data-act="editSec" data-t="${t.id}" data-s="${s.id}" aria-label="تعديل">✎</button>
+        <button class="mini" data-act="delSec" data-t="${t.id}" data-s="${s.id}" aria-label="حذف">🗑</button>
+      </div>
+      ${s.open?`<div class="fams">${s.families.map(f=>`<div class="frow ${S.nav&&S.nav.f===f.id?'cur':''}">
+        <button class="fname" data-act="openFam" data-t="${t.id}" data-s="${s.id}" data-f="${f.id}">${esc(f.name)}</button>
+        <button class="mini" data-act="editFam" data-t="${t.id}" data-s="${s.id}" data-f="${f.id}" aria-label="تعديل">✎</button>
+        <button class="mini" data-act="delFam" data-t="${t.id}" data-s="${s.id}" data-f="${f.id}" aria-label="حذف">🗑</button>
+      </div>`).join('')||'<div class="nofam">لا توجد عوائل — اضغط ＋ بجانب القسم</div>'}</div>`:''}
+    </div>`).join('')||'<div class="nofam">لا توجد أقسام — اضغط ＋ بجانب القبيلة</div>'}</div>`:''}
+  </div>`).join('');
+}
+
+/* ========== الصفحة الرئيسية ========== */
+function curFam(){if(!S.nav)return null;const t=S.tribes.find(x=>x.id===S.nav.t);const s=t&&t.sections.find(x=>x.id===S.nav.s);const f=s&&s.families.find(x=>x.id===S.nav.f);return f?{t,s,f}:null}
+
+function card(c){const sp=spouseText(c);const n=(c.children||[]).length;
+  return `<button class="pcard" data-act="open" data-id="${c.id}">${avatar(c)}
+    <div class="pname">${esc(c.name)}</div>
+    ${sp?`<div class="psp">${sp.lbl}: ${esc(sp.names)}</div>`:''}
+    ${n?`<div class="pkids">${n} من الأولاد ‹</div>`:''}</button>`}
+
+function renderMain(){
+  const m=$('#main');const cf=curFam();
+  if(!cf){S.nav=null;$('#title').textContent='أنسابي';
+    m.innerHTML=`<div class="welcome"><div class="wicon">🌳</div><h2>أنسابي</h2><p>افتح القائمة واختر عائلة لعرض شجرتها.</p><button class="btn" data-act="menu">فتح القائمة</button></div>`;return}
+  let path=(S.nav.path||[]).filter(id=>S.persons[id]);if(!path.length||path[0]!==cf.f.rootId)path=[cf.f.rootId];S.nav.path=path;
+  const depth=path.length-1;const p=S.persons[path[depth]];
+  $('#title').textContent=cf.f.name;
+  const role=depth===0?'الأب الكبير':`${p.gender==='f'?'بنت':'ابن'} ${esc(first(S.persons[path[depth-1]].name))}`;
+  const sp=spouseText(p);
+  const kids=(p.children||[]).map(c=>S.persons[c]).filter(Boolean);
+  const sons=kids.filter(c=>c.gender!=='f'),daus=kids.filter(c=>c.gender==='f');
+  m.innerHTML=`
+  <div class="crumbs" style="color:var(--muted);font-size:13px">${esc(cf.t.name)} ‹ ${esc(cf.s.name)} ‹ ${esc(cf.f.name)}</div>
+  ${depth>0?`<div class="crumbs">${path.map((pid,i)=>`<button class="crumb ${i===depth?'cur':''}" data-act="goto" data-i="${i}">${i===0?'🏠 ':''}${esc(first(S.persons[pid].name))}</button>`).join('<span class="sep">‹</span>')}</div>`:''}
+  <section class="hero">
+    <div class="role">${role}</div>
+    ${avatar(p,'big')}
+    <h2 class="fullname">${esc(p.name)}</h2>
+    ${sp?`<div class="spouses">${sp.lbl}: <b>${esc(sp.names)}</b></div>`:''}
+    <div class="hbtns">
+      ${depth>0?`<button class="btn ghost small" data-act="back">→ رجوع</button>`:''}
+      <button class="btn ghost small" data-act="edit" data-id="${p.id}">✎ تعديل</button>
+      ${depth>1?`<button class="btn ghost small" data-act="goto" data-i="0">🏠 الأب الكبير</button>`:''}
+    </div>
+  </section>
+  <div class="sechead"><h3>الأبناء <small>(${sons.length})</small></h3><button class="btn small" data-act="addChild" data-g="m">＋ ابن</button></div>
+  <div class="grid">${sons.map(card).join('')||'<p class="empty">لا يوجد أبناء مسجّلون</p>'}</div>
+  <div class="sechead"><h3>البنات <small>(${daus.length})</small></h3><button class="btn small" data-act="addChild" data-g="f">＋ بنت</button></div>
+  <div class="grid">${daus.map(card).join('')||'<p class="empty">لا توجد بنات مسجّلات</p>'}</div>`;
+  hydrate(m);
+}
+function render(){renderDrawer();renderMain()}
+function go(){save();renderMain();renderDrawer();window.scrollTo({top:0})}
+
+/* ========== نافذة الإدخال العامة ========== */
+function openModal(){$('#modal').classList.add('show')}
+function closeModal(){$('#modal').classList.remove('show');ED=null}
+function ask(title,fields){return new Promise(res=>{ED=null;
+  $('#sheet').innerHTML=`<h3>${esc(title)}</h3>${fields.map((f,i)=>`<label class="fl">${esc(f.label)}<input id="ask${i}" value="${esc(f.value||'')}" placeholder="${esc(f.ph||'')}"></label>`).join('')}
+  <div class="mbtns"><button class="btn" id="askOk">حفظ</button><button class="btn ghost" id="askNo">إلغاء</button></div>`;
+  openModal();
+  $('#askOk').onclick=()=>{const v=fields.map((f,i)=>$('#ask'+i).value.trim());if(!v[0]){toast('اكتب الاسم');return}closeModal();res(v)};
+  $('#askNo').onclick=()=>{closeModal();res(null)}})}
+
+/* ========== محرر الشخص ========== */
+function openEditor(o){
+  const p=o.id?S.persons[o.id]:{name:'',gender:o.gender||'m',spouses:[],photo:null};
+  ED={...o,photo:undefined,orig:p.photo,gender:p.gender||'m',spouses:[...(p.spouses||[])]};
+  if(!ED.spouses.length)ED.spouses=[''];
+  const root=o.id&&isRootId(o.id);
+  $('#sheet').innerHTML=`<h3>${o.id?'تعديل البيانات':'إضافة '+(o.gender==='f'?'بنت':'ابن')}</h3>
+  <div class="ephoto"><div id="edAv"></div>
+    <div class="pbtns">
+      <label class="btn small">🖼 من الاستديو<input type="file" accept="image/*" id="edFile" hidden></label>
+      <button class="btn small" data-ed="paste">📋 لصق صورة</button>
+      <button class="btn small ghost" data-ed="rmphoto">إزالة الصورة</button>
+    </div></div>
+  <label class="fl">${root?'الاسم الخماسي أو السداسي':'الاسم'}<textarea id="edName" rows="2">${esc(p.name)}</textarea></label>
+  ${root?'':`<div class="seg"><button data-ed="g" data-g="m" class="${ED.gender!=='f'?'on':''}">ذكر</button><button data-ed="g" data-g="f" class="${ED.gender==='f'?'on':''}">أنثى</button></div>`}
+  <div class="fl"><span id="spLbl"></span><div id="spList"></div>
+    <button class="btn small ghost" data-ed="addSp" style="margin-top:8px">＋ إضافة</button></div>
+  <div class="mbtns"><button class="btn" data-ed="save">حفظ</button><button class="btn ghost" data-ed="cancel">إلغاء</button>
+    ${o.id&&!root?`<button class="btn danger" data-ed="del">🗑 حذف</button>`:''}</div>`;
+  $('#edFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{setEdPhoto(await resize(f))}catch{toast('تعذّر فتح الصورة')}e.target.value=''};
+  renderEdPhoto();renderSp();openModal();
+}
+function renderEdPhoto(){const ph=ED.photo===undefined?ED.orig:(ED.photo==='remove'?null:'__new');
+  const name=$('#edName')?$('#edName').value:'';
+  $('#edAv').innerHTML=ph==='__new'?`<div class="avatar big"><img src="${ED.photo}" alt=""></div>`:avatar({photo:ph,name},'big');hydrate($('#edAv'))}
+function setEdPhoto(d){ED.photo=d;renderEdPhoto();toast('تمت إضافة الصورة')}
+function syncSp(){ED.spouses=[...document.querySelectorAll('#spList input')].map(i=>i.value)}
+function renderSp(){$('#spLbl').textContent=ED.gender==='f'?'الزوج':'الزوجة / الزوجات';
+  $('#spList').innerHTML=ED.spouses.map((s,i)=>`<div class="sprow"><input value="${esc(s)}" placeholder="${ED.gender==='f'?'اسم الزوج':'اسم الزوجة'}"><button class="mini" data-ed="rmSp" data-i="${i}">✕</button></div>`).join('')}
+
+async function pasteImage(){
+  try{const items=await navigator.clipboard.read();
+    for(const it of items){const t=it.types.find(x=>x.startsWith('image/'));if(t){setEdPhoto(await resize(await it.getType(t)));return}}
+    toast('لا توجد صورة منسوخة')}catch(e){toast('انسخ صورة أولاً ثم اضغط لصق')}}
+document.addEventListener('paste',e=>{if(!ED)return;const it=[...(e.clipboardData?.items||[])].find(i=>i.type.startsWith('image/'));
+  if(it){e.preventDefault();resize(it.getAsFile()).then(setEdPhoto)}});
+
+$('#sheet').addEventListener('click',async e=>{const b=e.target.closest('[data-ed]');if(!b||!ED)return;const a=b.dataset.ed;
+  if(a==='paste')return pasteImage();
+  if(a==='rmphoto'){ED.photo='remove';renderEdPhoto();return}
+  if(a==='g'){syncSp();ED.gender=b.dataset.g;document.querySelectorAll('.seg button').forEach(x=>x.classList.toggle('on',x===b));renderSp();return}
+  if(a==='addSp'){syncSp();ED.spouses.push('');renderSp();const ins=document.querySelectorAll('#spList input');ins[ins.length-1].focus();return}
+  if(a==='rmSp'){syncSp();ED.spouses.splice(+b.dataset.i,1);if(!ED.spouses.length)ED.spouses=[''];renderSp();return}
+  if(a==='cancel')return closeModal();
+  if(a==='save')return saveEditor();
+  if(a==='del'){const p=S.persons[ED.id];const ids=collect(p.id);
+    if(!confirm(`حذف «${p.name}»${ids.length>1?` ومعه ${ids.length-1} من ذريته`:''}؟`))return;
+    const par=S.persons[p.parent];if(par)par.children=par.children.filter(c=>c!==p.id);
+    await deletePersons(ids);closeModal();go();toast('تم الحذف')}
+});
+
+async function saveEditor(){
+  const name=$('#edName').value.trim();if(!name){toast('اكتب الاسم');return}
+  syncSp();const spouses=ED.spouses.map(s=>s.trim()).filter(Boolean);
+  let p;
+  if(ED.id)p=S.persons[ED.id];
+  else{p={id:uid(),name:'',gender:ED.gender,spouses:[],children:[],photo:null,parent:ED.parentId};S.persons[p.id]=p;S.persons[ED.parentId].children.push(p.id)}
+  p.name=name;p.gender=ED.gender;p.spouses=spouses;
+  if(ED.photo!==undefined){
+    if(p.photo){await DB.del('img',p.photo);delete imgCache[p.photo];p.photo=null}
+    if(ED.photo!=='remove'){const iid=uid();await DB.put('img',iid,ED.photo);imgCache[iid]=ED.photo;p.photo=iid}}
+  closeModal();await save();render();toast('تم الحفظ');
+}
+
+/* ========== الأحداث ========== */
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-act]');if(!b)return;
+  const {act,t,s,f,id}=b.dataset;const tribe=t&&S.tribes.find(x=>x.id===t);const sec=tribe&&s&&tribe.sections.find(x=>x.id===s);const fam=sec&&f&&sec.families.find(x=>x.id===f);
+  switch(act){
+  case 'menu':return openDrawer();
+  case 'close':return closeDrawer();
+  case 'toggle':tribe.open=!tribe.open;save();return renderDrawer();
+  case 'addTribe':{const v=await ask('قبيلة جديدة',[{label:'اسم القبيلة'}]);if(!v)return;
+    S.tribes.push({id:uid(),name:v[0],open:true,sections:[]});await save();return renderDrawer()}
+  case 'toggleSec':sec.open=!sec.open;save();return renderDrawer();
+  case 'addSec':{const v=await ask('قسم جديد في '+tribe.name,[{label:'اسم القسم'}]);if(!v)return;
+    tribe.sections.push({id:uid(),name:v[0],open:true,families:[]});tribe.open=true;await save();return renderDrawer()}
+  case 'editSec':{const v=await ask('تعديل اسم القسم',[{label:'اسم القسم',value:sec.name}]);if(!v)return;
+    sec.name=v[0];await save();return render()}
+  case 'delSec':{if(!confirm(`حذف قسم «${sec.name}» وجميع عوائله (${sec.families.length})؟ لا يمكن التراجع.`))return;
+    for(const fm of sec.families)await deletePersons(collect(fm.rootId));
+    tribe.sections=tribe.sections.filter(x=>x!==sec);await save();return render()}
+  case 'editTribe':{const v=await ask('تعديل اسم القبيلة',[{label:'اسم القبيلة',value:tribe.name}]);if(!v)return;
+    tribe.name=v[0];await save();return render()}
+  case 'delTribe':{if(!confirm(`حذف قبيلة «${tribe.name}» وجميع أقسامها (${tribe.sections.length}) وعوائلها (${famsOf(tribe).length})؟ لا يمكن التراجع.`))return;
+    for(const fm of famsOf(tribe))await deletePersons(collect(fm.rootId));
+    S.tribes=S.tribes.filter(x=>x!==tribe);await save();return render()}
+  case 'addFam':{const v=await ask('عائلة جديدة في '+sec.name,[{label:'اسم العائلة'},{label:'اسم الأب الكبير (خماسي أو سداسي)',ph:'يمكن إضافته لاحقاً'}]);if(!v)return;
+    const r={id:uid(),name:v[1]||v[0],gender:'m',spouses:[],children:[],photo:null,parent:null};S.persons[r.id]=r;
+    const nf={id:uid(),name:v[0],rootId:r.id};sec.families.push(nf);sec.open=true;tribe.open=true;
+    S.nav={t:tribe.id,s:sec.id,f:nf.id,path:[r.id]};closeDrawer();return go()}
+  case 'editFam':{const v=await ask('تعديل اسم العائلة',[{label:'اسم العائلة',value:fam.name}]);if(!v)return;
+    fam.name=v[0];await save();return render()}
+  case 'delFam':{const n=collect(fam.rootId).length;if(!confirm(`حذف عائلة «${fam.name}» (${n} شخص)؟ لا يمكن التراجع.`))return;
+    await deletePersons(collect(fam.rootId));sec.families=sec.families.filter(x=>x!==fam);await save();return render()}
+  case 'openFam':S.nav={t:tribe.id,s:sec.id,f:fam.id,path:[fam.rootId]};closeDrawer();return go();
+  case 'open':S.nav.path.push(id);return go();
+  case 'back':if(S.nav.path.length>1)S.nav.path.pop();return go();
+  case 'goto':S.nav.path=S.nav.path.slice(0,+b.dataset.i+1);return go();
+  case 'edit':return openEditor({id});
+  case 'addChild':return openEditor({parentId:S.nav.path[S.nav.path.length-1],gender:b.dataset.g});
+  case 'backup':return backup();
+  case 'restore':return $('#restoreFile').click();
+  }
+});
+
+/* ========== النسخ الاحتياطي ========== */
+async function backup(){
+  try{const keys=await DB.keys('img');const images={};for(const k of keys)images[k]=await DB.get('img',k);
+    const data={app:'ansabi',version:1,date:new Date().toISOString(),state:S,images};
+    const name='ansabi-backup-'+new Date().toISOString().slice(0,10)+'.json';
+    const blob=new Blob([JSON.stringify(data)],{type:'application/json'});const file=new File([blob],name,{type:'application/json'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:name});return}catch(e){if(e.name==='AbortError')return}}
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},3000)}catch(e){toast('تعذّر إنشاء النسخة')}}
+$('#restoreFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{const data=JSON.parse(await f.text());if(data.app!=='ansabi'||!data.state)throw 0;
+    const n=Object.keys(data.state.persons||{}).length;
+    if(!confirm(`استعادة النسخة (${(data.state.tribes||[]).length} قبيلة، ${n} شخص)؟ ستُستبدل البيانات الحالية بالكامل.`))return;
+    await DB.clear('img');for(const k in imgCache)delete imgCache[k];
+    for(const [k,v] of Object.entries(data.images||{}))await DB.put('img',k,v);
+    S=data.state;migrate();await save();closeDrawer();render();toast('تمت الاستعادة ✓')}
+  catch{toast('الملف غير صالح')}};
+
+/* ========== التشغيل ========== */
+(async()=>{
+  try{await DB.open();const s=await DB.get('kv','state');if(s)S=s}catch(e){toast('تعذّر فتح التخزين')}
+  migrate();
+  if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+  render();if(!curFam())openDrawer();
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>
