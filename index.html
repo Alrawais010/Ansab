@@ -45,7 +45,8 @@ main{padding:14px 14px calc(env(safe-area-inset-bottom) + 40px);max-width:760px;
 .frow{padding:2px 6px 2px 6px}
 .frow.cur .fname{color:var(--acc);font-weight:700}
 .fname{flex:1;text-align:right;background:none;border:none;padding:10px 26px 10px 6px;font-size:15px;position:relative}
-.fname:before{content:"•";position:absolute;right:10px;color:var(--muted)}
+.fname{display:flex;gap:8px;align-items:baseline}
+.fmk{color:var(--muted);font-weight:700;min-width:14px;flex:none}
 .mini{background:none;border:none;width:34px;height:34px;border-radius:10px;font-size:15px;color:var(--muted);flex:none}
 .mini:active{background:var(--acc-soft)}
 .nofam{color:var(--muted);font-size:13px;padding:8px 16px}
@@ -145,6 +146,10 @@ header h1{font-size:22px;font-weight:800}
 .seg button{font-size:17px;padding:11px}
 .sheet h3{font-size:21px}
 #toast{font-size:16px}
+.fname{padding-right:10px!important}
+.sw{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.sw button{width:40px;height:40px;border-radius:50%;border:3px solid var(--card);box-shadow:0 0 0 1px var(--line)}
+.sw button.on{box-shadow:0 0 0 3px var(--acc)}
 #sortBtn.on{background:var(--acc);color:#fff;border-color:var(--acc)}
 .mini.mv{background:var(--card);border:1px solid var(--line);color:var(--acc);font-size:16px;margin-inline-start:4px}
 .sprow select,.fl select{padding:12px 8px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:16px;flex:none}
@@ -185,7 +190,7 @@ header h1{font-size:22px;font-weight:800}
       <button class="btn ghost small" data-act="backup">💾 نسخة احتياطية</button>
       <button class="btn ghost small" data-act="restore">📂 استعادة</button>
     </div>
-    <div style="text-align:center;color:var(--muted);font-size:14px">الإصدار ٨</div>
+    <div style="text-align:center;color:var(--muted);font-size:14px">الإصدار ٩</div>
     <input type="file" id="restoreFile" accept=".json,application/json" hidden>
   </div>
 </aside>
@@ -256,19 +261,25 @@ $('#scrim').onclick=closeDrawer;
 let SORT=false;
 const tools=n=>SORT?`<button class="mini mv" data-act="mvUp" data-id="${n.id}" aria-label="رفع">▲</button><button class="mini mv" data-act="mvDn" data-id="${n.id}" aria-label="تنزيل">▼</button>`
   :`<button class="mini" data-act="editNode" data-id="${n.id}" aria-label="تعديل">✎</button><button class="mini" data-act="delNode" data-id="${n.id}" aria-label="حذف">🗑</button>`;
-function nodeHtml(n){
-  if(n.kind==='fam')return `<div class="frow ${S.nav&&S.nav.f===n.id?'cur':''}">
-    <button class="fname" data-act="openFam" data-id="${n.id}">${esc(n.name)}</button>
-    ${tools(n)}</div>`;
-  const kids=n.kids||[];
+const COLORS=['','#b3412e','#c4661f','#a07a00','#2f7d4f','#1f6f8b','#2f55b3','#7a3fa8','#b0367a','#6b4f2a'];
+const AR=n=>String(n).replace(/\d/g,d=>'٠١٢٣٤٥٦٧٨٩'[d]);
+const colSt=n=>n.color?` style="color:${n.color}"`:'';
+function swatches(cur){return `<div class="sw" id="swBox">${COLORS.map(c=>`<button type="button" data-c="${c}" class="${c===(cur||'')?'on':''}" style="background:${c||'var(--ink)'}" aria-label="لون"></button>`).join('')}</div>`}
+function bindSw(get,set){const b=$('#swBox');b.onclick=e=>{const x=e.target.closest('[data-c]');if(!x)return;set(x.dataset.c);b.querySelectorAll('button').forEach(y=>y.classList.toggle('on',y===x))}}
+function nodeHtml(n,i,mk){
+  if(n.kind==='fam'){const m=mk==='num'?`<span class="fmk">${AR(i)}.</span>`:mk==='none'?'':'<span class="fmk">•</span>';
+    return `<div class="frow ${S.nav&&S.nav.f===n.id?'cur':''}">
+    <button class="fname" data-act="openFam" data-id="${n.id}">${m}<span${colSt(n)}>${esc(n.name)}</span></button>
+    ${tools(n)}</div>`}
+  const kids=n.kids||[];let fi=0;
   return `<div class="grp g-${n.kind}"><div class="grow">
-    <button class="gname" data-act="toggle" data-id="${n.id}"><span class="chev">${n.open?'▾':'◂'}</span>${n.kind!=='tribe'?`<span class="kb">${KN[n.kind]}</span>`:''}<span>${esc(n.name)}</span><small>(${allFams(n).length})</small></button>
+    <button class="gname" data-act="toggle" data-id="${n.id}"><span class="chev">${n.open?'▾':'◂'}</span>${n.kind!=='tribe'?`<span class="kb">${KN[n.kind]}</span>`:''}<span${colSt(n)}>${esc(n.name)}</span><small>(${allFams(n).length})</small></button>
     ${SORT?'':`<button class="mini" data-act="addIn" data-id="${n.id}" aria-label="إضافة">＋</button>`}${tools(n)}</div>
-    ${n.open?`<div class="gkids">${kids.map(nodeHtml).join('')||'<div class="nofam">فارغ — اضغط ＋ لإضافة قسم أو فخذ أو ذوي أو عائلة</div>'}</div>`:''}</div>`}
+    ${n.open?`<div class="gkids">${kids.map(k=>nodeHtml(k,k.kind==='fam'?++fi:0,n.marker)).join('')||'<div class="nofam">فارغ — اضغط ＋ لإضافة قسم أو فخذ أو ذوي أو عائلة</div>'}</div>`:''}</div>`}
 function renderDrawer(){
   const list=$('#tribes');
   if(!S.tribes.length){list.innerHTML='<p class="empty">لا توجد قبائل بعد.<br>اضغط «إضافة قبيلة» للبدء.</p>';return}
-  list.innerHTML=S.tribes.map(nodeHtml).join('');
+  list.innerHTML=S.tribes.map(t=>nodeHtml(t)).join('');
 }
 
 /* ========== الصفحة الرئيسية ========== */
@@ -339,14 +350,26 @@ function choose(title,opts){return new Promise(res=>{ED=null;
 function editGroup(n,parent){
   const lo=parent?RANK[parent.kind]:0,hi=Math.min(4,...(n.kids||[]).map(k=>RANK[k.kind]));
   const kinds=n.kind==='tribe'?[]:['sec','fakh','thawi'].filter(k=>RANK[k]>lo&&RANK[k]<hi);
-  return new Promise(res=>{ED=null;let kind=n.kind;
+  const hasFam=(n.kids||[]).some(k=>k.kind==='fam');
+  return new Promise(res=>{ED=null;let kind=n.kind,color=n.color||'',marker=n.marker||'dot';
     $('#sheet').innerHTML=`<h3>تعديل ${KN[n.kind]}</h3><label class="fl">الاسم<input id="egName" value="${esc(n.name)}"></label>
     ${kinds.length>1?`<div class="fl">النوع<div class="seg" id="egSeg">${kinds.map(k=>`<button data-k="${k}" class="${k===kind?'on':''}">${KN[k]}</button>`).join('')}</div></div>`:''}
+    <div class="fl">لون الاسم${swatches(color)}</div>
+    ${hasFam?`<div class="fl">شكل قائمة العوائل بداخله<div class="seg" id="mkSeg">${[['dot','• نقطة'],['num','١. رقم'],['none','بدون']].map(([k,l])=>`<button data-m="${k}" class="${k===marker?'on':''}">${l}</button>`).join('')}</div></div>`:''}
     <div class="mbtns"><button class="btn" id="egOk">حفظ</button><button class="btn ghost" id="egNo">إلغاء</button></div>`;openModal();
     const seg=$('#egSeg');if(seg)seg.onclick=e=>{const b=e.target.closest('[data-k]');if(!b)return;kind=b.dataset.k;seg.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))};
-    $('#egOk').onclick=()=>{const v=$('#egName').value.trim();if(!v){toast('اكتب الاسم');return}closeModal();res({name:v,kind})};
+    bindSw(()=>color,c=>color=c);
+    const mk=$('#mkSeg');if(mk)mk.onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;marker=b.dataset.m;mk.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))};
+    $('#egOk').onclick=()=>{const v=$('#egName').value.trim();if(!v){toast('اكتب الاسم');return}closeModal();res({name:v,kind,color,marker})};
     $('#egNo').onclick=()=>{closeModal();res(null)}})}
 
+function editFam(n){return new Promise(res=>{ED=null;let color=n.color||'';
+  $('#sheet').innerHTML=`<h3>تعديل العائلة</h3><label class="fl">اسم العائلة<input id="efName" value="${esc(n.name)}"></label>
+  <div class="fl">لون الاسم${swatches(color)}</div>
+  <div class="mbtns"><button class="btn" id="efOk">حفظ</button><button class="btn ghost" id="efNo">إلغاء</button></div>`;openModal();
+  bindSw(()=>color,c=>color=c);
+  $('#efOk').onclick=()=>{const v=$('#efName').value.trim();if(!v){toast('اكتب الاسم');return}closeModal();res({name:v,color})};
+  $('#efNo').onclick=()=>{closeModal();res(null)}})}
 /* ========== محرر الشخص ========== */
 function openEditor(o){
   const p=o.id?S.persons[o.id]:{name:'',gender:o.gender||'m',spouses:[],photo:null};
@@ -441,8 +464,8 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-act]
     const v=await ask('إضافة '+KN[kind]+' في '+node.name,[{label:'اسم '+KN[kind],ph:kind==='thawi'?'مثال: ذوي عامر':''}]);if(!v)return;
     node.kids.push({id:uid(),kind,name:v[0],open:true,kids:[]});await save();return renderDrawer()}
   case 'editNode':{
-    if(node.kind==='fam'){const v=await ask('تعديل اسم العائلة',[{label:'اسم العائلة',value:node.name}]);if(!v)return;node.name=v[0]}
-    else{const v=await editGroup(node,r.chain[r.chain.length-2]);if(!v)return;node.name=v.name;node.kind=v.kind}
+    if(node.kind==='fam'){const v=await editFam(node);if(!v)return;node.name=v.name;node.color=v.color}
+    else{const v=await editGroup(node,r.chain[r.chain.length-2]);if(!v)return;node.name=v.name;node.kind=v.kind;node.color=v.color;node.marker=v.marker}
     await save();return render()}
   case 'delNode':{const fams=allFams(node);const n=fams.reduce((a,f)=>a+collect(f.rootId).length,0);
     if(!confirm(node.kind==='fam'?`حذف عائلة «${node.name}» (${n} شخص)؟ لا يمكن التراجع.`:`حذف ${KN[node.kind]} «${node.name}» وكل ما بداخله (${fams.length} عائلة، ${n} شخص)؟ لا يمكن التراجع.`))return;
